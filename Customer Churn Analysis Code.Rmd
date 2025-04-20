@@ -1,0 +1,195 @@
+---
+title: "Customer churn analysis code"
+author: "Philip and Frankline"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+**Data Collection.**
+
+```{r}
+telecom_customer_churn <- read.csv("C:/Users/lenovo/Desktop/telecom_customer_churn.csv")
+View(telecom_customer_churn)
+```
+
+
+
+#Data preparation.#
+```{r}
+sapply(telecom_customer_churn, function(x) sum(is.na(x)))
+telecom_customer_churn$Avg.Monthly.GB.Download[is.na(telecom_customer_churn$Avg.Monthly.Long.Distance.Charges)]<-mean(telecom_customer_churn$Avg.Monthly.Long.Distance.Charges,na.rm = TRUE)
+telecom_customer_churn$Avg.Monthly.Long.Distance.Charges[is.na(telecom_customer_churn$Avg.Monthly.Long.Distance.Charges)]<-mean(telecom_customer_churn$Avg.Monthly.Long.Distance.Charges,na.rm = TRUE)
+telecom_customer_churn <- telecom_customer_churn[complete.cases(telecom_customer_churn), ]
+telecom_customer_churn$Phone.Service<-as.character(telecom_customer_churn$Phone.Service)
+telecom_customer_churn$Multiple.Lines<-as.character(telecom_customer_churn$Multiple.Lines)
+telecom_customer_churn$Online.Security<-as.character(telecom_customer_churn$Online.Security)
+telecom_customer_churn$Online.Backup<-as.character(telecom_customer_churn$Online.Backup)
+telecom_customer_churn$Device.Protection.Plan<-as.character(telecom_customer_churn$Device.Protection.Plan)
+telecom_customer_churn$Premium.Tech.Support<-as.character(telecom_customer_churn$Premium.Tech.Support)
+telecom_customer_churn$Streaming.TV<-as.character(telecom_customer_churn$Streaming.TV)
+telecom_customer_churn$Streaming.Movies<-as.character(telecom_customer_churn$Streaming.Movies)
+telecom_customer_churn$Streaming.Music<-as.character(telecom_customer_churn$Streaming.Music)
+telecom_customer_churn$Unlimited.Data<-as.character(telecom_customer_churn$Unlimited.Data)
+telecom_customer_churn$Paperless.Billing<-as.character(telecom_customer_churn$Paperless.Billing)
+telecom_customer_churn$Customer.Status<-as.factor(telecom_customer_churn$Customer.Status)
+telecom_customer_churn$Customer.ID<-NULL
+telecom_customer_churn$Married<-as.character(telecom_customer_churn$Married)
+telecom_customer_churn$Internet.Service<-NULL
+```
+
+
+#EXPLORATORY DATA ANALYSIS.#
+```{r}
+boxplot (telecom_customer_churn$Total.Revenue, main = "Boxplot of Total.Revenue", xlab = "Total.Revenue", ylab = "Dollars")
+boxplot(telecom_customer_churn$Monthly.Charge, main = "Boxplot of Monthly.Charges", xlab = "Monthly.Charge", ylab = "Months")
+boxplot(telecom_customer_churn$Total.Long.Distance.Charges, main = "Boxplot of Total.Long.Distance.Charges", xlab = "Total.Long.Distance.Charges", ylab = "Months")
+boxplot(telecom_customer_churn$Avg.Monthly.Long.Distance.Charges, main = "Boxplot of Avg.Monthly.Long.Distance.Charges", xlab = "Avg.Monthly.Long.Distance.Charges", ylab = "Months")
+boxplot(telecom_customer_churn$Avg.Monthly.GB.Download, main = "Boxplot of Avg.Monthly.GB.Download", xlab = "Avg.Monthly.GB.Download", ylab = "Dollars")
+```
+
+
+#Create Barplot to check for relationship between categorical variable aganist customer churn.#
+```{r}
+Customer.Status <- telecom_customer_churn$Customer.Status
+Gender <- telecom_customer_churn$Gender
+barplot(table(Customer.Status, Gender), beside = TRUE, col = c("blue","grey", "red"), legend = TRUE, xlab = "Gender", ylab = "Customer.Status")
+Contract <- telecom_customer_churn$Contract
+barplot(table(Customer.Status,Contract), beside = TRUE, col = c("blue","grey", "red"), legend = TRUE, xlab = "Contract", ylab = "Customer.Status")
+Internet.Type  <- telecom_customer_churn$Internet.Type 
+barplot(table(Customer.Status,Internet.Type), beside = TRUE, col = c("blue","grey", "red"), legend = TRUE, xlab = "Internet.Type", ylab = "Customer.Status")
+Streaming.Movies<-telecom_customer_churn$Streaming.Movies
+barplot(table(Customer.Status, Streaming.Movies), beside=TRUE, col=c("blue","grey","red"),legend=TRUE, xlab="Streaming.Movies", ylab="Customer.Status")
+Unlimited.Data<-telecom_customer_churn$Unlimited.Data
+barplot(table(Customer.Status,Unlimited.Data),beside=TRUE,col=c("blue","grey","red"),legend=TRUE, xlab="Unlimited.Data",ylab="Customer.Status")
+Married<-telecom_customer_churn$Married
+barplot(table(Customer.Status,Married),beside=TRUE,col=c("blue","grey","red"),legend=TRUE,xlab="Married", ylab="Customer.Status")
+Online.Security<-telecom_customer_churn$Online.Security
+barplot(table(Customer.Status,Online.Security),beside=TRUE,col=c("blue","grey","red"),legend=TRUE,xlab="Online.Security",ylab="Customer.Status")
+Online.Backup<-telecom_customer_churn$Online.Backup
+barplot(table(Customer.Status,Online.Backup),beside=TRUE,col=c("blue","grey","red"),legend=TRUE,xlab="Online.Backup",ylab="Customer.Status")
+Premium.Tech.Support <-telecom_customer_churn$Premium.Tech.Support
+barplot(table(Customer.Status,Premium.Tech.Support),beside=TRUE,col=c("blue","grey","red"),legend=TRUE,xlab="Premium.Tech.Support",ylab="Customer.Status")
+Streaming.Music<-telecom_customer_churn$Streaming.Music
+barplot(table(Customer.Status,Streaming.Music),beside=TRUE,col=c("blue","grey","red"),legend=TRUE,xlab="streaming.Music",ylab="Customer.Status")
+Streaming.TV<-telecom_customer_churn$Streaming.TV
+barplot(table(Customer.Status,Streaming.TV),beside=TRUE,col=c("blue","grey","red"),legend=TRUE,xlab="Streaming.TV",ylab="Customer.Status")
+```
+
+#numerical variables aganist churn.#
+```{r}
+hist(telecom_customer_churn$Age)
+mean_revenue <- aggregate(Total.Revenue ~ Contract, data = telecom_customer_churn, mean)
+barplot(mean_revenue$Total.Revenue, names.arg = mean_revenue$Contract,
+        main = "Average Total Revenue by Contract Type",
+        xlab = "Contract Type", ylab = "Total Revenue",
+        col = c("blue", "grey", "red"))
+```
+
+#Filtering the data for more insights.#
+```{r}
+library(dplyr)
+churn_data <- filter(telecom_customer_churn, Customer.Status == "Churned")
+churn_summary1 <- group_by(churn_data, Churn.Reason) %>%
+  summarize(count = n())
+churn_summary1
+library(ggplot2)
+ggplot(churn_summary1, aes(x = Churn.Reason, y = count, fill = Churn.Reason)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Customer Status by Churn Reasons",
+       x = "Churn Reasons", y = "Number of Customers") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#We can also check which categories have the most churned customers.#
+
+```{r}
+churn_data <- filter(telecom_customer_churn, Customer.Status == "Churned")
+churn_summary2  <- group_by(churn_data, Churn.Category) %>%
+  summarize(count = n())
+churn_summary2
+library(ggplot2)
+ggplot(churn_summary2, aes(x = Churn.Category, y = count, fill = Churn.Category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Customer Status by Churn Category",
+       x = "Churn Category", y = "Number of Customers") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#check if there is relation between contract and charges.#
+```{r}
+ggplot(telecom_customer_churn, aes(x = Customer.Status, y = Monthly.Charge)) +geom_point(aes(color = Customer.Status)) +labs(x = "Customer.Status", y = "Monthly Charge") +
+  ggtitle("Customer Status by Monthly Charge") +theme_minimal()
+```
+
+#DATA MODELLING USING MACHINE LEARNING.#
+
+#Classification#
+
+#Building classification model.#
+```{r}
+set.seed(123)
+library(caTools)
+Sample<-sample.split(telecom_customer_churn$Customer.Status, SplitRatio = 0.8)
+trainSet<-subset(telecom_customer_churn, Sample==TRUE)
+testSet<-subset(telecom_customer_churn, Sample==FALSE)
+trainSet <- subset(trainSet, select = -City)
+testSet <- subset(testSet, select = -City)
+```
+
+#Support Vector Machine#
+```{r}
+library(e1071)
+library(caret)
+svmod <- svm(formula = Customer.Status ~ ., data = trainSet, type = "C-classification", 
+    kernel = "linear")
+svmtrain<-predict(svmod,trainSet,type="class")
+table(svmtrain,trainSet$Customer.Status)
+svmtest<-predict(svmod,testSet,type="class")
+table(svmtest,testSet$Customer.Status)
+confusion_matrix <- confusionMatrix(svmtest, testSet$Customer.Status)
+print(confusion_matrix)
+```
+
+#Naive Bayes Classifier#
+```{r}
+library(e1071)
+nbmod<-naiveBayes(Customer.Status~.,data=trainSet)
+nbtrain<-predict(nbmod,trainSet,type = "class")
+table(nbtrain,trainSet$Customer.Status)
+nbtest<-predict(nbmod,testSet,type = "class")
+confusion_matrix <- confusionMatrix(nbtest, testSet$Customer.Status)
+print(confusion_matrix)
+```
+
+#Random Forest#
+```{r}
+library(randomForest)
+rfmod<-randomForest(Customer.Status~.,data=trainSet,importance=T)
+predtrain<-predict(rfmod,trainSet,type = "class")
+table(predtrain,trainSet$ Customer.Status)
+predtest<-predict(rfmod,testSet,type = "class")
+table(predtest,testSet$Customer.Status)
+confusion_matrix <- confusionMatrix(predtest, testSet$Customer.Status)
+print(confusion_matrix)
+```
+
+#Logistic Regression.#
+```{r}
+class_lr <- glm(Customer.Status ~ ., data = trainSet, family = binomial(link = "logit"))
+predicted_prob <- predict(class_lr, newdata = testSet, type = "response")
+predicted_labels <- ifelse(predicted_prob > 0.5, 1, 0)
+confusion_matrix <- table(predicted_labels, testSet$Customer.Status)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(confusion_matrix)
+cat("Accuracy:", accuracy, "\n")
+sensitivity <- confusion_matrix[2, 2] / sum(confusion_matrix[2, ])
+precision <- confusion_matrix[2, 2] / sum(confusion_matrix[, 2])
+specificity <- confusion_matrix[1, 1] / sum(confusion_matrix[1, ])
+cat("Specificity (True Negative Rate):", specificity, "\n")
+cat("Sensitivity (Recall):", sensitivity, "\n")
+cat("Precision (Positive Predictive Value):", precision, "\n")
+```
+
+
+
+
